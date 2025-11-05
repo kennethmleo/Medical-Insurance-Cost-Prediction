@@ -1,8 +1,10 @@
 # Medical Insurance Cost Prediction
 
-## Overview
+## Problem Description
 
-This project aims to predict medical insurance costs using machine learning algorithms. The prediction model takes into account various factors such as age, BMI, smoking status, and other relevant parameters to estimate insurance costs.
+This project predicts an individual's expected monthly medical insurance premium based on demographic, lifestyle, and health information.
+
+The goal is to assist insurance companies in estimating fair premium rates and help customers understand cost factors. The model leverages both demographic and medical features such as age, BMI, income, smoking habits, and health conditions.
 
 ## Features
 

@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+from flask import Flask, request, jsonify
+import mlflow
+import pandas as pd
+import os
+
+# --- Load from MLflow registry ---
+MODEL_NAME = "best RF model"
+MODEL_ALIAS = "champion"
+
+# ✅ dynamically pick MLflow path (Docker vs local)
+mlruns_path = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
+mlflow.set_tracking_uri(mlruns_path)
+
+print(f"🔍 Loading model '{MODEL_NAME}' ({MODEL_ALIAS}) from MLflow at {mlruns_path}...")
+model = mlflow.pyfunc.load_model(f"models:/{MODEL_NAME}@{MODEL_ALIAS}")
+
+app = Flask("insurance-predictor")
+
+
+@app.route("/predict", methods=["POST"])
+def predict_endpoint():
+    try:
+        data = request.get_json()
+
+        # --- Accept either single record or list of records ---
+        if isinstance(data, dict):
+            df = pd.DataFrame([data])  # single record
+        elif isinstance(data, list):
+            df = pd.DataFrame(data)  # batch prediction
+        else:
+            return jsonify({"error": "Input must be a JSON object or list"}), 400
+
+        preds = model.predict(df)
+
+        # --- Return one or many ---
+        results = [
+            {"predicted_monthly_premium": round(float(p), 2)} for p in preds
+        ]
+        return jsonify(results if len(results) > 1 else results[0])
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=9696)

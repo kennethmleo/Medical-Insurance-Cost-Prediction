@@ -1,0 +1,13 @@
+# Ignore MLflow experiment artifacts
+mlruns/
+notebooks/mlruns/
+notebooks/
+data/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.venv/
+.env
+.DS_Store

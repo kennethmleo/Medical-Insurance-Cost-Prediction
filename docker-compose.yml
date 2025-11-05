@@ -1,0 +1,32 @@
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.5.1
+    container_name: mlflow-server
+    ports:
+      - "5500:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow.db
+      - MLFLOW_ARTIFACT_ROOT=/mlruns
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlruns
+    volumes:
+      - ./mlruns:/mlruns
+      - ./mlflow.db:/mlflow.db
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /mlruns
+      --host 0.0.0.0
+      --port 5500
+      --allowed-hosts mlflow,localhost,127.0.0.1,*
+
+  predictor:
+    build: .
+    container_name: insurance-predictor
+    depends_on:
+      - mlflow
+    ports:
+      - "9696:9696"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5500
+    command: >
+      python src/service/predict_flask.py
