@@ -5,7 +5,12 @@ mlflow
 prefect
 fastapi
 uvicorn
-evidently
+evidently==0.6.7
 python-dotenv
 joblib
 seaborn
+tqdm
+requests
+pyarrow
+psycopg
+psycopg_binary

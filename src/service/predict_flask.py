@@ -7,14 +7,19 @@ import pandas as pd
 import os
 
 # --- Load from MLflow registry ---
+# --- Load from MLflow registry ---
 MODEL_NAME = "best RF model"
 MODEL_ALIAS = "champion"
 
-# ✅ dynamically pick MLflow path (Docker vs local)
-mlruns_path = os.getenv("MLFLOW_TRACKING_URI", "file:./mlruns")
-mlflow.set_tracking_uri(mlruns_path)
+# ✅ Detect local vs remote tracking URI
+mlflow_uri = os.getenv("MLFLOW_TRACKING_URI")
+if mlflow_uri:
+    mlflow.set_tracking_uri(mlflow_uri)
+else:
+    # Default to local tracking
+    mlflow.set_tracking_uri("file:./mlruns")
 
-print(f"🔍 Loading model '{MODEL_NAME}' ({MODEL_ALIAS}) from MLflow at {mlruns_path}...")
+print(f"🔍 Loading model '{MODEL_NAME}' ({MODEL_ALIAS}) from MLflow at {mlflow.get_tracking_uri()}...")
 model = mlflow.pyfunc.load_model(f"models:/{MODEL_NAME}@{MODEL_ALIAS}")
 
 app = Flask("insurance-predictor")

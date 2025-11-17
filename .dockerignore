@@ -1,13 +1,10 @@
-# Ignore MLflow experiment artifacts
-mlruns/
-notebooks/mlruns/
-notebooks/
-data/
-__pycache__/
+# .dockerignore
+__pycache__
 *.pyc
 *.pyo
 *.pyd
 *.db
-.venv/
+*.log
 .env
-.DS_Store
+# keep mlruns for model artifacts
+!mlruns/

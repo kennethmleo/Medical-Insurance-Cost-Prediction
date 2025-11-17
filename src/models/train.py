@@ -4,6 +4,7 @@
 import pandas as pd
 import numpy as np
 import mlflow
+import mlflow.sklearn
 from math import sqrt
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -78,22 +79,30 @@ def train_pipeline(
     r2 = r2_score(y_val, preds)
 
     # --- Log to MLflow ---
-    mlflow.set_tracking_uri("mlruns")
+    # ✅ Use the same tracking URI and artifact location as Docker
+    mlflow.set_tracking_uri("file:./mlruns")
     mlflow.set_experiment("insurance-cost-prediction")
 
-    with mlflow.start_run(run_name=f"{model_name}_run"):
+    with mlflow.start_run(run_name=f"{model_name}_run") as run:
         mlflow.log_param("model", model_name)
-        mlflow.log_param("test_size", test_size)
-        mlflow.log_param("random_state", random_state)
         mlflow.log_metric("rmse", rmse)
         mlflow.log_metric("mae", mae)
         mlflow.log_metric("r2", r2)
-        mlflow.sklearn.log_model(pipe, artifact_path="model")
 
+        # ✅ Use relative artifact path, not absolute
+        mlflow.sklearn.log_model(pipe, artifact_path="model", registered_model_name="best RF model")
+
+        # --- Set alias for serving
+        # --- Set alias for latest version automatically
+    client = mlflow.MlflowClient()
+    latest = client.get_latest_versions("best RF model", stages=["None"])[-1]
+    client.set_registered_model_alias("best RF model", "champion", latest.version)
+
+
+    print(f"✅ Registered model as 'best RF model' (alias: champion)")
     print(f"{model_name.upper()} | RMSE={rmse:.2f} | MAE={mae:.2f} | R2={r2:.3f}")
 
 
-# --- CLI entry point ---
 if __name__ == "__main__":
     import argparse
 
@@ -101,12 +110,10 @@ if __name__ == "__main__":
     parser.add_argument("--data_path", type=str, default="data/cleaned_insurance.csv")
     parser.add_argument("--model_name", type=str, default="rf", help="rf or linreg")
     parser.add_argument("--test_size", type=float, default=0.2)
-    parser.add_argument("--random_state", type=int, default=42)
     args = parser.parse_args()
 
     train_pipeline(
         data_path=args.data_path,
         model_name=args.model_name,
         test_size=args.test_size,
-        random_state=args.random_state,
     )
